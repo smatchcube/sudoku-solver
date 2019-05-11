@@ -21,9 +21,9 @@ typedef uint_fast8_t pos;
 void load_grid(FILE *, digit board[9][9]);
 void solve(digit board[9][9]);
 void set_first_pos(pos * i, pos * j, bool was_originally_here[9][9]);
-void next_box(pos * i, pos * j, bool was_originally_here[9][9]);
-void previous_box(pos * i, pos * j, bool was_originally_here[9][9]);
-bool is_correct(pos i, pos j, digit board[9][9]);
+void next_cell(pos * i, pos * j, bool was_originally_here[9][9]);
+void previous_cell(pos * i, pos * j, bool was_originally_here[9][9]);
+bool is_legit(pos i, pos j, digit board[9][9]);
 void print_board(digit board[9][9]);
 
 int main(int argc, char * argv[])
@@ -32,11 +32,11 @@ int main(int argc, char * argv[])
 	digit board[9][9];
 
 	if (argc != 2) {
-		printf("Usage: %s [FILE]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [FILE]\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 	if ((fp = fopen(argv[1], "r")) == NULL) {
-		printf("Can't open %s for read.\n", argv[1]);
+		fprintf(stderr, "Can't open %s for read.\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
 	load_grid(fp, board);
@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
 }
 
 void load_grid(FILE * fp, digit board[9][9])
-/* set up the grid of the game */
+/* set up the initial grid */
 {
 	for (pos i = 0; i < 9; ++i) {
 		for (pos j = 0; j < 9; ++j)
@@ -70,14 +70,14 @@ void solve(digit board[9][9])
 	pos j;
 	set_first_pos(&i, &j, was_originally_here);
 	board[i][j] = 1;
-	while (i != 8 || j != 8 || !is_correct(8, 8, board)) {
-		if (is_correct(i, j, board)) {        //forward to the next box
-			next_box(&i, &j, was_originally_here);
+	while (i != 8 || j != 8 || !is_legit(8, 8, board)) {
+		if (is_legit(i, j, board)) {        //forward to the next box
+			next_cell(&i, &j, was_originally_here);
 			board[i][j] = 1;
 		} else {               //try next digit
 			++board[i][j];
 			while (board[i][j] > 9) {
-				previous_box(&i, &j, was_originally_here);
+				previous_cell(&i, &j, was_originally_here);
 				++board[i][j];
 			}
 		}
@@ -99,9 +99,9 @@ void set_first_pos(pos * i, pos * j, bool was_originally_here[9][9])
 	}
 }	
 
-void next_box(pos * i, pos * j, bool was_originally_here[9][9])
-/* set the position to the next empty box 
- * or last box if everything is filled */
+void next_cell(pos * i, pos * j, bool was_originally_here[9][9])
+/* set the position to the next empty cell 
+ * or last cell if everything is filled */
 {
 	do {
 		if (*j == 8) {
@@ -112,8 +112,8 @@ void next_box(pos * i, pos * j, bool was_originally_here[9][9])
 	} while (was_originally_here[*i][*j] && (*i != 8 && *j != 8));
 }
 
-void previous_box(pos * i, pos * j, bool was_originally_here[9][9])
-/* set the position to the previous valid box */
+void previous_cell(pos * i, pos * j, bool was_originally_here[9][9])
+/* set the position to the previous valid cell */
 {
 	do {
 		if (*j == 0) {
@@ -124,8 +124,8 @@ void previous_box(pos * i, pos * j, bool was_originally_here[9][9])
 	} while (was_originally_here[*i][*j]);
 }
 
-bool is_correct(pos i, pos j, digit board[9][9])
-/* check wether the digit at the position is legit */
+bool is_legit(pos i, pos j, digit board[9][9])
+/* check whether the digit at the position is legit */
 {
 	digit d = board[i][j];
 
@@ -139,7 +139,7 @@ bool is_correct(pos i, pos j, digit board[9][9])
 		if (board[n][j] == d && n != i)
 			return false;
 	}
-	// check for duplicate in the square
+	// check for duplicate in the 3x3 block
 	pos u = i - i % 3 + 3;
 	pos v = j - j % 3;
 	pos w = j - j % 3 + 3;
