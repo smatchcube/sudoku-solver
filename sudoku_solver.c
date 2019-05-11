@@ -20,11 +20,11 @@ typedef uint_fast8_t pos;
 
 void load_grid(FILE *, digit board[9][9]);
 void solve(digit board[9][9]);
-void set_first_pos(pos * i, pos * j, bool was_originally_here[9][9]);
-void next_cell(pos * i, pos * j, bool was_originally_here[9][9]);
-void previous_cell(pos * i, pos * j, bool was_originally_here[9][9]);
-bool is_legit(pos i, pos j, digit board[9][9]);
-void print_board(digit board[9][9]);
+void set_first_pos(pos * i, pos * j, const bool grid[9][9]);
+void next_cell(pos * i, pos * j, const bool grid[9][9]);
+void previous_cell(pos * i, pos * j, const bool grid[9][9]);
+bool is_legit(pos i, pos j, const digit board[9][9]);
+void print_board(const digit board[9][9]);
 
 int main(int argc, char * argv[])
 {
@@ -61,23 +61,23 @@ void load_grid(FILE * fp, digit board[9][9])
 void solve(digit board[9][9])
 /* solve the grid using backtracking */
 {
-	bool was_originally_here[9][9];
+	bool grid[9][9];
 	for (pos i = 0; i < 9; ++i) {
 		for (pos j = 0; j < 9; ++j)
-			was_originally_here[i][j] = board[i][j] != 0;
+			grid[i][j] = board[i][j] != 0;
 	}
 	pos i;
 	pos j;
-	set_first_pos(&i, &j, was_originally_here);
+	set_first_pos(&i, &j, grid);
 	board[i][j] = 1;
 	while (i != 8 || j != 8 || !is_legit(8, 8, board)) {
 		if (is_legit(i, j, board)) {        //forward to the next box
-			next_cell(&i, &j, was_originally_here);
+			next_cell(&i, &j, grid);
 			board[i][j] = 1;
 		} else {               //try next digit
 			++board[i][j];
 			while (board[i][j] > 9) {
-				previous_cell(&i, &j, was_originally_here);
+				previous_cell(&i, &j, grid);
 				++board[i][j];
 			}
 		}
@@ -85,12 +85,12 @@ void solve(digit board[9][9])
 	}
 }
 
-void set_first_pos(pos * i, pos * j, bool was_originally_here[9][9])
+void set_first_pos(pos * i, pos * j, const bool grid[9][9])
 /* Set the position to the first valid position */
 {
 	*i = 0;
 	*j = 0;
-	while (was_originally_here[*i][*j]) {
+	while (grid[*i][*j]) {
 		if (*j == 8) {
 			(*j) = 0;
 			++(*i);
@@ -99,7 +99,7 @@ void set_first_pos(pos * i, pos * j, bool was_originally_here[9][9])
 	}
 }	
 
-void next_cell(pos * i, pos * j, bool was_originally_here[9][9])
+void next_cell(pos * i, pos * j, const bool grid[9][9])
 /* set the position to the next empty cell 
  * or last cell if everything is filled */
 {
@@ -109,10 +109,10 @@ void next_cell(pos * i, pos * j, bool was_originally_here[9][9])
 			++(*i);
 		} else
 			++(*j);
-	} while (was_originally_here[*i][*j] && (*i != 8 && *j != 8));
+	} while (grid[*i][*j] && (*i != 8 && *j != 8));
 }
 
-void previous_cell(pos * i, pos * j, bool was_originally_here[9][9])
+void previous_cell(pos * i, pos * j, const bool grid[9][9])
 /* set the position to the previous valid cell */
 {
 	do {
@@ -121,21 +121,21 @@ void previous_cell(pos * i, pos * j, bool was_originally_here[9][9])
 			--(*i);
 		} else
 			--(*j);
-	} while (was_originally_here[*i][*j]);
+	} while (grid[*i][*j]);
 }
 
-bool is_legit(pos i, pos j, digit board[9][9])
+bool is_legit(pos i, pos j, const digit board[9][9])
 /* check whether the digit at the position is legit */
 {
 	digit d = board[i][j];
-
+	pos n, m;
 	// check for duplicate in the row j
-	for (pos n = 0; n < 9; ++n) {
+	for (n = 0; n < 9; ++n) {
 		if (board[i][n] == d && n != j)
 			return false;
 	}
 	// check for duplicate in the column i
-	for (pos n = 0; n < 9; ++n) {
+	for (n = 0; n < 9; ++n) {
 		if (board[n][j] == d && n != i)
 			return false;
 	}
@@ -143,8 +143,8 @@ bool is_legit(pos i, pos j, digit board[9][9])
 	pos u = i - i % 3 + 3;
 	pos v = j - j % 3;
 	pos w = j - j % 3 + 3;
-	for (pos n = i - i % 3; n < u; ++n) {
-		for (pos m = v; m < w; ++m) {
+	for (n = i - i % 3; n < u; ++n) {
+		for (m = v; m < w; ++m) {
 			if (board[n][m] == d && n != i && m != j)
 				return false;
 		}
@@ -152,7 +152,7 @@ bool is_legit(pos i, pos j, digit board[9][9])
 	return true;
 }
 
-void print_board(digit board[9][9])
+void print_board(const digit board[9][9])
 {
 	for (pos i = 0; i < 9; ++i) {
 		for (pos j = 0; j < 9; ++j)
