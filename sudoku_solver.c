@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <string.h>
 
 typedef uint_fast8_t digit;
 typedef uint_fast8_t pos;	
@@ -36,7 +38,8 @@ int main(int argc, char * argv[])
 		exit(EXIT_FAILURE);
 	}
 	if ((fp = fopen(argv[1], "r")) == NULL) {
-		fprintf(stderr, "Can't open %s for read.\n", argv[1]);
+		fprintf(stderr, "Can't open %s for read: %s\n",
+			argv[1], strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	load_grid(fp, board);
