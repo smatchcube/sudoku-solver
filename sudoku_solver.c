@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
 	solve(board);
 	print_board(board);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 void load_grid(FILE * fp, digit board[9][9])
